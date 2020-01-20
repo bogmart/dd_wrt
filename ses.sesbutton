@@ -1,0 +1,12 @@
+#!/bin/sh 
+
+### purpose:          toggle WiFi 2.4GHz and 5Ghz when SES button is pressed
+### script location:  /tmp/etc/config/   or  /jffs/etc/config  (see resetbutton.c)
+### steps:            cp script; chmod +x
+
+if [ "$( (ifconfig ath0 ; ifconfig ath1) | grep -o RUNNING)" ];
+then
+  /tmp/etc/config/wl_off.sh
+else
+  /tmp/etc/config/wl_on.sh
+fi
