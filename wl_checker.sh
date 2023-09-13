@@ -7,9 +7,13 @@
 ### output            /tmp/logWl.txt
 ### steps:            cp -p <script>; chmod +x
 
+
 wait_for_WiFi_clients=3610
-interf_WiFi_0=ath0
-interf_WiFi_1=ath1
+
+#ignore: priza-suf, tel-radu, tel-vlad
+ignore_clients="1c:61:b4:4c:b4:61|8C:B8:4A:66:8B:F8|6C:C7:EC:B4:C6:14"
+
+ifaces_WiFi=$(ifconfig | grep -oE "ath[.0-9]+")
 
 log_file=/tmp/myLogs/logWl.txt
 mkdir -p `dirname ${log_file}`
@@ -17,12 +21,30 @@ mkdir -p `dirname ${log_file}`
 #echo $(date)
 echo proc="$0"  script="${0##*/}"  pid=$$
 
-if [ "$( (ifconfig $interf_WiFi_0 ; ifconfig $interf_WiFi_1) | grep -o RUNNING)" ]; then
+
+wiFi_state="off"
+for intf in ${ifaces_WiFi}; do
+  if [ "$( (ifconfig $intf) | grep -o RUNNING)" ]; then
+    #echo "WiFi active on " ${intf}
+    wiFi_state="on"
+    break
+  fi
+done
+
+if [ "${wiFi_state}" == "on" ]; then
   existing_proc_pid="$(pidof ${0##*/})"
   #echo existing_proc_pid $existing_proc_pid
-  
-  if [ "$( (iw dev $interf_WiFi_0 station dump ; iw dev $interf_WiFi_1 station dump) | grep Station)" ]; then
-    #echo "WiFi client(s) present(s)"
+
+  wiFi_clients="false"
+  for intf in $ifaces_WiFi; do
+    if [ "$( (iw dev ${intf} station dump) | grep Station | grep -vE ${ignore_clients} )" ]; then
+      #echo "WiFi client(s) present(s) on " ${intf}
+      wiFi_clients="true"
+      break
+    fi
+  done
+
+  if [ ${wiFi_clients} == "true" ]; then
     for pid in $existing_proc_pid; do
       if [ $pid != $$ ]; then
         echo "$(date): kill process running with PID $pid" | tee -a $log_file
