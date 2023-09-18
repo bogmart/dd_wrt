@@ -8,7 +8,5 @@ cp -p  /tmp/myLogs/*  /jffs/myLogs/
 rm /tmp/myLogs/*
 
 #copy system logs
-cp /var/log/messages  /jffs/myLogs/var_logs_$(date +%y.%m.%d_%a).txt
-
-
-
+cp   /var/log/messages      /jffs/myLogs/var_logs_$(date +%y.%m.%d_%a).txt
+cat  /var/log/messages.0 >> /jffs/myLogs/var_logs_$(date +%y.%m.%d_%a).txt
